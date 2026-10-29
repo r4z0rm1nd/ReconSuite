@@ -31,6 +31,10 @@ import shutil
 l=[]
 p=[]
 isHttps = False
+isConfigured = False
+
+def is_package_installed(package):
+    return shutil.which(package) is not None
 def resolve_ip(addr):
     try:
         parsed = urlparse(addr)
@@ -193,8 +197,7 @@ def normalize_url(target):
 
     if isHttps:
         return f"https://{target}"
-    else:
-        return f"http://{target}"
+    else:        return f"http://{target}"
 def get_hostname(target):
     parsed = urlparse(target)
     if parsed.hostname:
@@ -205,11 +208,57 @@ def get_dnsinfo(target):
     time.sleep(1)
     with open("dns.txt", "w") as f:
         subprocess.run(["sh", "./dig.sh"], stdout=f)
+    check = input("[?] Next stage: AI summary. Do you still wish to continue with the scan? Enter \"y\" or \"n\"")
+    if check.lower() == "y":
+        ai_summary()
+    elif check.lower() == "n":
+        print("[+] Exiting...")
+def ai_summary():
+    print("TEST")
+
+def configure():
+    necessaryDependencies = ["nmap", "dig", "git"]
+    moreDependencies = ["cmseek", "subfinder"]
+    depedenciesToBeInstalled = []
+    moreDependenciesToBeInstalled = []
+    installAnyDependency = False
+    for dependency in necessaryDependencies:
+        if not is_package_installed(dependency):
+            installAnyDependency = True
+            print(f"[-] {dependency} not installed")
+            depedenciesToBeInstalled.append(dependency)
+    for dependency in moreDependencies:
+        if dependency == "cmseek":
+            if not os.path.exists(f"cmsdetection"):
+                print(f"[-] {dependency} not installed")
+        if dependency == "subfinder":
+            if not os.path.exists(f"sub"):
+                print(f"[-] {dependency} not installed")
+    request = "Do you wish to install "
+    for dependency in depedenciesToBeInstalled:
+        request = request + f"{dependency}, "
+    for dependency in moreDependenciesToBeInstalled:
+        request = request + f"{dependency}, "
+    request = request + "? "
+    if installAnyDependency:
+        response = input(request + "Enter \"y\" or \"n\"")
+    for dependency in depedenciesToBeInstalled:
+        if dependency == "cmseek":
+            install_cmseek()
+        if dependency == "subfinder":
+            install_subfinder()
+
 
 print("ReconSuite 1.0\n")
 print("By Wil Jankovic\n")
 print("Disclaimer: This is only to be used in controlled, authorized environments, or for educational purposes.\n")
 print("----------------------------------------------------------------------------------------------------------")
+try:
+    with open("config.config", "r") as f:
+        print("TEST")
+except FileNotFoundError:
+    print("[*] Initiating first time setup")
+    configure()
 if os.geteuid() != 0:
     print("[-] Please run this script as root")
     quit(1)
