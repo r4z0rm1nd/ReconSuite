@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 import requests
 import json
 import shutil
+import struct
 
 l=[]
 p=[]
@@ -215,9 +216,20 @@ def get_dnsinfo(target):
         print("[+] Exiting...")
 def ai_summary():
     print("TEST")
+def install_cmseek():
+    print("[*] Installing CMSeek")
+    time.sleep(1)
+    subprocess.run(["sh", "./cmseek.sh"])
 
+def install_subfinder():
+    print("[*] Installing subfinder")
+    time.sleep(1)
+    if struct.calcsize("P") * 8 == 32:
+        subprocess.run(["sh", "./sub386.sh"])
+    else:
+        subprocess.run(["sh", "./sub.sh"])
 def configure():
-    necessaryDependencies = ["nmap", "dig", "git"]
+    necessaryDependencies = ["nmap", "dig", "git", "curl", "unzip"]
     moreDependencies = ["cmseek", "subfinder"]
     depedenciesToBeInstalled = []
     moreDependenciesToBeInstalled = []
@@ -225,28 +237,32 @@ def configure():
     for dependency in necessaryDependencies:
         if not is_package_installed(dependency):
             installAnyDependency = True
-            print(f"[-] {dependency} not installed")
+            print(f"[-] {dependency} not installed. You need to install it first (it's a system package)")
             depedenciesToBeInstalled.append(dependency)
     for dependency in moreDependencies:
         if dependency == "cmseek":
+            installAnyDependency = True
             if not os.path.exists(f"cmsdetection"):
                 print(f"[-] {dependency} not installed")
+                moreDependenciesToBeInstalled.append(dependency)
         if dependency == "subfinder":
+            installAnyDependency = True
             if not os.path.exists(f"sub"):
                 print(f"[-] {dependency} not installed")
+            moreDependenciesToBeInstalled.append(dependency)
     request = "Do you wish to install "
-    for dependency in depedenciesToBeInstalled:
-        request = request + f"{dependency}, "
     for dependency in moreDependenciesToBeInstalled:
         request = request + f"{dependency}, "
     request = request + "? "
     if installAnyDependency:
         response = input(request + "Enter \"y\" or \"n\"")
-    for dependency in depedenciesToBeInstalled:
+    for dependency in moreDependenciesToBeInstalled:
         if dependency == "cmseek":
             install_cmseek()
         if dependency == "subfinder":
             install_subfinder()
+    with open("config.config", "w") as f:
+        f.write("3A 33")
 
 
 print("ReconSuite 1.0\n")
@@ -255,7 +271,7 @@ print("Disclaimer: This is only to be used in controlled, authorized environment
 print("----------------------------------------------------------------------------------------------------------")
 try:
     with open("config.config", "r") as f:
-        print("TEST")
+        print("[*] Config loaded")
 except FileNotFoundError:
     print("[*] Initiating first time setup")
     configure()
