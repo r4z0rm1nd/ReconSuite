@@ -110,12 +110,18 @@ def loadScannedPorts(xmlfile):
         # what...
         l.append(f" - {port.attrib["protocol"].upper()} port {port.attrib["portid"]}: {state.attrib['state']}. Nmap service name: {port.find("service").attrib['name']}")
         p.append(port.attrib["portid"])
+    check = input("[?] Next stage: Banner grabbing. Do you still wish to continue with the scan? Enter \"y\" or \"n\"")
+    if check.lower() == "y":
+        grabBanners(address)
+    elif check.lower() == "n":
+        print("[+] Exiting...")
+def grabBanners(address):
+    # TODO: Implement this
     check = input("[?] Next stage: Confirming web server. Do you still wish to continue with the scan? Enter \"y\" or \"n\"")
     if check.lower() == "y":
         checkIfWebserver(address)
     elif check.lower() == "n":
         print("[+] Exiting...")
-
 def writeToMd():
     m_lines = l
     with open("doc.md", "w") as f:
@@ -123,6 +129,7 @@ def writeToMd():
             f.write(line + "\n")
 
 def checkIfWebserver(addr):
+    global isHttps
     #print("\nPlease consult the following nmap results, and use ReconSuite's current findings to determine whether a potential web server exists. If it does exist, enter 'y'. Otherwise, enter 'n'.")
     #choice = input("[$] Does a web server exist?: ")
     #if choice.lower() == "y":
@@ -235,6 +242,7 @@ def get_dnsinfo(target):
     elif check.lower() == "n":
         print("[+] Exiting...")
 def ai_summary():
+    # TODO: Actually implement this function, this is literally going to be the coolest part of the project.
     url = "http://localhost:11434/api/generate"
     r = requests.get(f"http://localhost:11434")
     if r.status_code == 200:
