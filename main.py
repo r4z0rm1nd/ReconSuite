@@ -65,12 +65,32 @@ def ping(addr):
         scan_ports(address)
 
 def scan_ports(addr):
+    global args
     print("[+] Scanning ports")
     print("[+] Powered by nmap")
     time.sleep(1)
-    pscan = subprocess.call(["nmap", "-oX" , "scan.xml" , "-Pn" , "-sT" , "-vvv" , addr])
+    with open('config.config', 'r') as file:
+        lines = file.readlines()
+    if len(lines) >= 2:
+        previous_args = lines[1].strip().split("#")
+        previous_args = [arg for arg in previous_args if arg]
+    else:
+        previous_args = []
+    isPrev = input("[?] Do you want to use previous arguments? Enter \"y\" or \"n\": ")
+    if previous_args and isPrev.lower() == "y":
+        args = previous_args
+    else:
+        args = input("[$] Please enter nmap arguments: ").split()
+    if isPrev.lower() == "n":
+        toSave = input("[?] Do you want to save the arguments? (y/n): ")
+        if toSave.lower() == "y":
+            saveArgs = "#".join(args) + "#"
+            with open('config.config', 'a') as file:
+                file.write(saveArgs)
+    pscan = subprocess.call(["nmap", "-oX", "scan.xml"] + args + [addr])
     l.append("## Nmap results")
     l.append(" ")
+
     loadScannedPorts("scan.xml")
 
 def loadScannedPorts(xmlfile):
@@ -215,7 +235,22 @@ def get_dnsinfo(target):
     elif check.lower() == "n":
         print("[+] Exiting...")
 def ai_summary():
-    print("TEST")
+    url = "http://localhost:11434/api/generate"
+    r = requests.get(f"http://localhost:11434")
+    if r.status_code == 200:
+        print("[*] Server responded. The target is alive.")
+        model = input("[$] Enter model name: ")
+        print("[*] Generating AI summary of ReconSuite's findings")
+        print("[*] Powered by Ollama")
+        data = { \
+            "model": model, \
+            "prompt": "Generate a section of a summary based on the results of the security tool: nmap. ", \
+            "stream": False \
+            }
+        r = requests.post(url, json.dumps(data))
+        print(r.text)
+    else:
+        print("[!] No response from server. The target may not be reachable.")
 def install_cmseek():
     print("[*] Installing CMSeek")
     time.sleep(1)
